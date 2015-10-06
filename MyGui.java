@@ -4,11 +4,17 @@ package A1V18; /**
 
 import javax.swing.*;
 
+/**
+ * Author : Thomas Flynn
+ * Student ID: G00291875
+ * Subject: Client Server Programming
+ * Assignment 1&2: Streams & Thread Safe Swing
+ * */
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -113,19 +119,36 @@ public class MyGui extends JFrame {
     }
 
     void loadWords() {
-    	String[] lineArray = null;
-        try {
-            rr.extractWords();//have to reset contents for reversing contents
-            rr.reverseContents();
-            lineArray = rr.getArrayOfLines();
+        SwingWorker<String[], Void> worker1 = new SwingWorker<String[], Void>() {
+
+
+            @Override
+            protected String[] doInBackground() throws Exception {
+                String[] lineArray = null;
+
+                try {
+                    lineArray = rr.getArrayOfLines();
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return lineArray;
+            }//doInBackground()
+
+            @Override
+            protected void done(){
+                try {
+                    String[] lineArray = get();
                     for(String W: lineArray)
                             jTextArea1.append(W + "\n");
                 }
                 catch (Exception e) {
                     e.printStackTrace();
                 }
-        }//done
-
+            }//done
+        };//swing worker
+        worker1.execute();
+    }//loadWords()
 
 
     /*************************************************
@@ -150,18 +173,37 @@ public class MyGui extends JFrame {
     }
 
     void ReverseWords() {
-    	String[] lineArray = null;
-        try {
-            rr.extractWords();//have to reset contents for reversing contents
-            rr.reverseContents();
-            lineArray = rr.getArrayOfLines();
-                    for(String W: lineArray)
-                            jTextArea2.append(W + "\n");
+        SwingWorker<String[], Void> worker2 = new SwingWorker<String[], Void>() {
+
+
+            @Override
+            protected String[] doInBackground() throws Exception {
+                String[] lineArray = null;
+                try {
+                    rr.reverseContents();
+                    lineArray = rr.getArrayOfLines();
+                } 
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return lineArray;
+            }//doInBackground()
+
+            @Override
+            protected void done() {
+                try {
+                    String[] localstring = get();
+
+                    for (String W : localstring)
+                        jTextArea2.append(W + "\n");
                 }
                 catch (Exception e) {
                     e.printStackTrace();
                 }
-        }//done
+            }//done
+        };//swing worker
+        worker2.execute();
+    }//loadWords()
 
     /*************************************************
      * Start Reverse pairs code
@@ -186,18 +228,35 @@ private class ButtonCounterActionListener3 implements ActionListener {
 }
 
     void ReversePairs() {
-    	String[] lineArray = null;
-        try {
-            rr.extractWords();//have to reset contents for reversing contents
-            rr.reversePairs();
-            lineArray = rr.getArrayOfLines();
+        SwingWorker<String[], Void> worker3 = new SwingWorker<String[], Void>() {
+            @Override
+            protected String[] doInBackground()  {
+                String[] lineArray = null;
+                try {
+                    rr.extractWords();//have to reset contents for reversing words
+                    rr.reversePairs();
+                    lineArray = rr.getArrayOfLines();
+                } 
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return lineArray;
+            }//doInBackground()
+
+            @Override
+            protected void done(){
+                try {
+                    String[] lineArray = get();
                     for(String W: lineArray)
-                            jTextArea3.append(W + "\n");
+                        jTextArea3.append(W + "\n");
                 }
                 catch (Exception e) {
                     e.printStackTrace();
                 }
-        }//done
+            }//done
+        };//swing worker
+        worker3.execute();
+    }//start()
 
     /*************************************************
      * Start Reverse word count code
@@ -210,18 +269,41 @@ private class ButtonCounterActionListener4 implements ActionListener {
     }
 }
 
+    @SuppressWarnings("rawtypes")
 	void wordCount() {
+        SwingWorker<Map, Void> worker4 = new SwingWorker<Map, Void>() {
+
+            @SuppressWarnings("unchecked")
+			@Override
+            protected Map<String, Integer> doInBackground() {
             	Map<String, Integer> LocalWordCountMap = new HashMap<String, Integer>();
                 try {
                     rr.countWordsFunc();
                     LocalWordCountMap = rr.getWordCount();
-                    for (Map.Entry<String, Integer> entry : LocalWordCountMap.entrySet()) 
-                        jTextArea4.append("''" + (entry.getKey() + "''  occurs "+entry.getValue() + " times\n"));
 
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-     }
+                return LocalWordCountMap;
+            }
+
+            @SuppressWarnings("unchecked")
+			@Override
+            protected void done() {
+            	Map<String, Integer> LocalWordCountMap = new HashMap<String, Integer>();
+                try {
+                	LocalWordCountMap = get();
+                    for (Map.Entry<String, Integer> entry : LocalWordCountMap.entrySet()) {
+                        jTextArea4.append("''" + (entry.getKey() + "''  occurs "+entry.getValue() + " times\n"));
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }//done
+
+        };//swing worker
+        worker4.execute();
+    }//start()
 
 /***************************************************************
  * Listener 5 is the JFileChooser button
@@ -233,7 +315,7 @@ private class ButtonCounterActionListener5 implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         try {
-            if (e.getSource() == openButton) {
+            if (e.getSource() == openButton) {//The object (openButton = new JButton)  on which the Event initially occurred.
                 returnVal = fileChooser.showOpenDialog(null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     file = fileChooser.getSelectedFile();
@@ -250,13 +332,17 @@ private class ButtonCounterActionListener5 implements ActionListener {
 }//ButtonCounterActionListener5
 
 
-    void startIOThread() {        
-                try {
-					rr = new Rearrange(fileAbsolutePath);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+    void startIOThread() {
+        SwingWorker<Void, Void> worker0 = new SwingWorker<Void, Void>() {
+
+            @Override
+            protected Void doInBackground() throws Exception {
+                //create object by passing filepath
+                rr = new Rearrange(fileAbsolutePath);
+                return null;
+            }//doInBackground()
+        };
+        worker0.execute();
     }//startIOThread()
 
     public static void main(String[] args) {
