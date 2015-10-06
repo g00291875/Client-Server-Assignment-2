@@ -1,8 +1,16 @@
-package A1; /**
+package A1V18; /**
  * Created by user on 18/09/2015.
  */
 
 import javax.swing.*;
+
+/**
+ * Author : Thomas Flynn
+ * Student ID: G00291875
+ * Subject: Client Server Programming
+ * Assignment 1&2: Streams & Thread Safe Swing
+ * */
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -44,11 +52,7 @@ public class MyGui extends JFrame {
         try {
             //********************** first gui **********************//
             load = new JButton("load");
-            load.addActionListener(new ButtonCounterActionListener1(){
-                public void actionPerformed(ActionEvent arg0){
-                    loadWords();
-                }
-            });
+            load.addActionListener(new ActionListener1());
 
             reverseContents = new JButton("Reverse Contents");
             reverseContents.addActionListener(new ActionListener2());
@@ -107,11 +111,10 @@ public class MyGui extends JFrame {
     /*************************************************
      * Start Load words code
      *******************************/
-    private class ButtonCounterActionListener1 implements ActionListener {
+    private class ActionListener1 implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-
-            System.out.println("1");
+        	loadWords();
         }
     }
 
@@ -161,9 +164,8 @@ public class MyGui extends JFrame {
                     public void run() {
                         ReverseWords();
                     }
-                });
-
-            }
+                } );//SwingUtilities.invokeLater(new Runnable() {
+            }//try
             catch (Exception e1) {
                 e1.printStackTrace();
             }
@@ -178,11 +180,10 @@ public class MyGui extends JFrame {
             protected String[] doInBackground() throws Exception {
                 String[] lineArray = null;
                 try {
-                    // return rr.reverseContents();
-                    rr.extractWords();//have to reset contents for reversing contents
                     rr.reverseContents();
                     lineArray = rr.getArrayOfLines();
-                } catch (Exception e) {
+                } 
+                catch (Exception e) {
                     e.printStackTrace();
                 }
                 return lineArray;
@@ -235,7 +236,8 @@ private class ButtonCounterActionListener3 implements ActionListener {
                     rr.extractWords();//have to reset contents for reversing words
                     rr.reversePairs();
                     lineArray = rr.getArrayOfLines();
-                } catch (Exception e) {
+                } 
+                catch (Exception e) {
                     e.printStackTrace();
                 }
                 return lineArray;
@@ -267,12 +269,14 @@ private class ButtonCounterActionListener4 implements ActionListener {
     }
 }
 
-    void wordCount() {
-        SwingWorker<Boolean, Void> worker4 = new SwingWorker<Boolean, Void>() {
-            Map<String, Integer> LocalWordCountMap = new HashMap<String, Integer>();
+    @SuppressWarnings("rawtypes")
+	void wordCount() {
+        SwingWorker<Map, Void> worker4 = new SwingWorker<Map, Void>() {
 
-            @Override
-            protected Boolean doInBackground() {
+            @SuppressWarnings("unchecked")
+			@Override
+            protected Map<String, Integer> doInBackground() {
+            	Map<String, Integer> LocalWordCountMap = new HashMap<String, Integer>();
                 try {
                     rr.countWordsFunc();
                     LocalWordCountMap = rr.getWordCount();
@@ -280,12 +284,15 @@ private class ButtonCounterActionListener4 implements ActionListener {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                return true;
+                return LocalWordCountMap;
             }
 
-            @Override
+            @SuppressWarnings("unchecked")
+			@Override
             protected void done() {
+            	Map<String, Integer> LocalWordCountMap = new HashMap<String, Integer>();
                 try {
+                	LocalWordCountMap = get();
                     for (Map.Entry<String, Integer> entry : LocalWordCountMap.entrySet()) {
                         jTextArea4.append("''" + (entry.getKey() + "''  occurs "+entry.getValue() + " times\n"));
                     }
